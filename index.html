@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ruleta de Sorteos</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="alternate icon" href="./favicon.ico" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <!-- Barra superior minimalista -->
+      <header class="app-header">
+        <div class="header-info">
+          <h1 id="app-title" class="title">Ruleta de Sorteos</h1>
+          <p id="app-subtitle" class="subtitle">Carga tus elementos para comenzar</p>
+        </div>
+        <div class="header-actions">
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display: none" />
+          <button id="btn-upload" class="btn btn-secondary" title="Subir archivo Excel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span id="text-btn-upload">Subir Excel</span>
+          </button>
+          <button id="btn-quick-text" class="btn btn-secondary" title="Pegar lista de texto">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span id="text-btn-quick">Texto</span>
+          </button>
+          <button id="btn-settings" class="btn btn-secondary" title="Configuración">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span id="text-btn-settings">Ajustes</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Contenedor principal dividido -->
+      <main class="main-content">
+        <!-- Columna izquierda: La máquina de sorteo -->
+        <section class="wheel-panel">
+          <div class="status-bar">
+            <span id="pool-count" class="badge">0 disponibles</span>
+            <button id="btn-open-list" class="btn-link" style="margin-left: 6px;">Ver y editar lista</button>
+            <span id="discard-target-badge" class="badge badge-subtle" style="display: none; margin-left: auto;">0 a descartar</span>
+          </div>
+
+          <div class="slot-container">
+            <!-- Indicador de centro (mira minimalista) -->
+            <div class="slot-pointer left"></div>
+            <div class="slot-pointer right"></div>
+
+            <!-- Ventana del carrete con máscara superior e inferior -->
+            <div class="slot-viewport" id="slot-viewport">
+              <div class="slot-reel" id="slot-reel">
+                <!-- Se inyecta dinámicamente -->
+              </div>
+
+              <!-- Overlay minimalista de Ganador / Descartado -->
+              <div class="result-overlay" id="result-overlay" style="display: none;">
+                <div class="result-card">
+                  <div class="result-badge" id="result-badge">GANADOR</div>
+                  <h2 class="result-title" id="result-title">-</h2>
+                  <p class="result-subtitle" id="result-subtitle"></p>
+                  <div class="result-actions" id="result-actions">
+                    <a id="result-link" class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" style="display: none;">
+                      Ver Enlace
+                    </a>
+                    <button id="btn-close-overlay" class="btn btn-secondary btn-sm">Continuar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controles de tiro -->
+          <div class="controls-area">
+            <button id="btn-spin" class="btn btn-primary btn-lg" disabled>
+              <span id="text-btn-spin">TIRAR RULETA</span>
+            </button>
+            <div id="timer-badge" class="timer-badge" style="display: none;">
+              <span id="timer-number">30</span>s
+            </div>
+          </div>
+        </section>
+
+        <!-- Columna derecha: Tablas de Ganadores y Descartados -->
+        <aside class="sidebar-panel">
+          <!-- Sección Ganadores -->
+          <div class="panel-card">
+            <div class="card-header">
+              <div class="card-header-left">
+                <span class="card-title" id="text-winners-title">Ganadores</span>
+                <span id="winners-count" class="badge">0</span>
+              </div>
+              <div class="card-header-actions" style="display: flex; gap: 10px; align-items: center;">
+                <button id="btn-export-results" class="btn-link" title="Descargar Acta en Excel" style="display: none;">Descargar Acta</button>
+                <button id="btn-reset" class="btn-link" title="Reiniciar Sorteo">Reiniciar</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="winners-list" class="items-list">
+                <p class="empty-hint" id="text-no-winners">Aún no hay ganadores.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección Descartados (se oculta si toDiscard es 0) -->
+          <div class="panel-card" id="discarded-card" style="display: none;">
+            <div class="card-header">
+              <div class="card-header-left">
+                <span class="card-title" id="text-discarded-title">Descartados</span>
+                <span id="discarded-count" class="badge badge-subtle">0</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="discarded-list" class="items-list">
+                <p class="empty-hint" id="text-no-discarded">No hay elementos descartados.</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <!-- Modal nativo de Ver y Editar Lista de Participantes -->
+    <dialog id="modal-items-list" class="modal-dialog modal-dialog-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-header-title">
+            <h2>Participantes en Juego</h2>
+            <span id="modal-items-counter" class="badge">0 en total</span>
+          </div>
+          <button class="btn-close" id="btn-close-items-list">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Aviso amigable si se ignoró un encabezado -->
+          <div id="banner-skipped-header" class="info-banner" style="display: none;">
+            <span>💡 Se ignoró la primera fila como título: <strong id="skipped-header-name">Nombre</strong>.</span>
+            <button id="btn-restore-header" class="btn btn-secondary btn-sm">+ Incluir en la ruleta</button>
+          </div>
+
+          <!-- Formulario rápido para agregar un participante -->
+          <form id="form-add-item" class="form-add-row">
+            <input type="text" id="input-new-item-label" class="form-control" placeholder="Escribir nuevo nombre o premio..." required />
+            <input type="text" id="input-new-item-sub" class="form-control" placeholder="Subtítulo opcional..." style="max-width: 180px;" />
+            <button type="submit" class="btn btn-primary btn-sm">+ Agregar</button>
+          </form>
+
+          <!-- Buscador en tiempo real -->
+          <div class="search-box">
+            <input type="text" id="input-search-items" class="form-control" placeholder="🔍 Buscar por nombre..." />
+          </div>
+
+          <!-- Contenedor con scroll de los elementos -->
+          <div id="edit-items-container" class="edit-items-scroll">
+            <!-- Filas inyectadas por JavaScript -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-close-items-list-bottom" class="btn btn-secondary">Listo</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Modal nativo de Configuración -->
+    <dialog id="modal-settings" class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-settings-heading">Configuración</h2>
+          <button class="btn-close" id="btn-close-settings">&times;</button>
+        </div>
+        <form id="settings-form" class="modal-body">
+          <div class="form-group">
+            <label for="select-preset">Modo / Plantilla de Sorteo</label>
+            <div style="display: flex; gap: 8px;">
+              <select id="select-preset" class="form-control" style="flex: 1;"></select>
+              <button type="button" id="btn-open-create-preset" class="btn btn-secondary btn-sm" title="Crear plantilla propia">+ Crear</button>
+              <button type="button" id="btn-delete-preset" class="btn btn-secondary btn-sm" style="display: none;" title="Eliminar esta plantilla">🗑️</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="input-title" id="lbl-title">Título</label>
+            <input type="text" id="input-title" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="input-subtitle" id="lbl-subtitle">Subtítulo</label>
+            <input type="text" id="input-subtitle" class="form-control" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="select-lang" id="lbl-language">Idioma</label>
+              <select id="select-lang" class="form-control">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="input-to-discard" id="lbl-to-discard">Descartar antes de ganar</label>
+              <input type="number" id="input-to-discard" class="form-control" min="0" max="50" value="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="input-timer" id="lbl-timer-sec">Segundos Temporizador</label>
+              <input type="number" id="input-timer" class="form-control" min="5" max="300" value="30" />
+            </div>
+          </div>
+          <div class="form-toggles">
+            <label class="checkbox-label">
+              <input type="checkbox" id="check-timer" />
+              <span id="lbl-check-timer">Activar cuenta regresiva</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="check-sound" checked />
+              <span id="lbl-check-sound">Efectos de sonido mecánicos</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="check-show-sub" checked />
+              <span id="lbl-check-show-sub">Mostrar texto secundario en carrete</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="check-remove-win" />
+              <span id="lbl-check-remove-win">Quitar ganador de la lista al salir</span>
+            </label>
+          </div>
+          <div class="modal-footer">
+            <a href="/res/userlist_base.xlsx" download="plantilla_sorteo.xlsx" class="btn btn-link btn-sm" id="lnk-download-template">
+              Descargar plantilla Excel
+            </a>
+            <button type="submit" class="btn btn-primary" id="btn-save-settings">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Modal nativo de Entrada Rápida de Texto -->
+    <dialog id="modal-quick-text" class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-quick-heading">Entrada Rápida</h2>
+          <button class="btn-close" id="btn-close-quick">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="hint-text" id="quick-input-hint">Un elemento por línea. Opcionalmente usa "|" para separar subtítulo (ej: Premio 1 | Categoría A).</p>
+          <textarea id="quick-textarea" class="form-control textarea" rows="8" placeholder="Elemento 1&#10;Elemento 2 | Subtítulo"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-cancel-quick" class="btn btn-secondary">Cancelar</button>
+          <button id="btn-apply-quick" class="btn btn-primary">Cargar Elementos</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Modal nativo para Crear Nueva Plantilla -->
+    <dialog id="modal-create-preset" class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Crear Nueva Plantilla</h2>
+          <button class="btn-close" id="btn-close-create-preset">&times;</button>
+        </div>
+        <form id="form-create-preset" class="modal-body">
+          <div class="form-group">
+            <label for="input-preset-name">Nombre de tu Modo / Plantilla</label>
+            <input type="text" id="input-preset-name" class="form-control" placeholder="Ej: Mis Alumnos, Tareas de Equipo..." required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="input-preset-item-label">¿Cómo se llama cada elemento?</label>
+              <input type="text" id="input-preset-item-label" class="form-control" placeholder="Ej: Estudiante, Tarea..." required />
+            </div>
+            <div class="form-group">
+              <label for="input-preset-sub-label">¿Cómo se llama el detalle opcional?</label>
+              <input type="text" id="input-preset-sub-label" class="form-control" placeholder="Ej: Curso, Responsable..." />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="input-preset-prefix">Prefijo secundario (opcional)</label>
+              <input type="text" id="input-preset-prefix" class="form-control" placeholder="Ej: @ o #" style="max-width: 140px;" />
+            </div>
+            <div class="form-group">
+              <label for="input-preset-action">Texto del botón de enlace</label>
+              <input type="text" id="input-preset-action" class="form-control" placeholder="Ej: Ver Ficha, Abrir..." />
+            </div>
+          </div>
+          <div class="form-toggles">
+            <label class="checkbox-label">
+              <input type="checkbox" id="check-preset-remove" />
+              <span>Quitar ganador de la ruleta automáticamente al salir</span>
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="btn-cancel-create-preset" class="btn btn-secondary">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Plantilla</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Notificación sutil (Toast) humana -->
+    <div id="toast-notification" class="toast-notification" style="display: none;"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
